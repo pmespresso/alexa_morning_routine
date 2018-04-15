@@ -1,0 +1,10 @@
+GetNextEventIntent mission accomplished
+GetNextEventIntent done
+GetNextEventIntent finished
+GetNextEventIntent i'm done
+GetNextEventIntent next routine
+
+AMAZON.StopIntent no
+AMAZON.StopIntent nope
+AMAZON.StopIntent no thanks
+AMAZON.StopIntent no thank you
