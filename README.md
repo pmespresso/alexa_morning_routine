@@ -4,7 +4,7 @@
 
 1. Get out of bed within 2 minutes of waking up
 2. Make your bed
-3. Meditate
+3. Meditate --> Plays ambient noise pulled from soundcloud for the duration.
 4. Jump in a Cold Shower
 5. Drink some tea or coffee
 6. Exercise
