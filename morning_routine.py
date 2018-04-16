@@ -12,25 +12,29 @@ ask = Ask(app, "/")
 
 logging.getLogger("flask_ask").setLevel(logging.DEBUG)
 
+ROUTINE_INDEX = "index"
 
 @ask.launch
 def new_game():
-
     welcome_msg = render_template('welcome')
-
     return question(welcome_msg)
 
-@ask.intent("MissionAccomplishedIntent")
+@ask.intent("GetNextEventIntent")
 def next_routine():
-
+    if not session.attributes:
+        print("hello from this side -> " + str(session.attributes))
+        session.attributes[ROUTINE_INDEX] = 1
+    else:
+        print("hello from the other side -> " + str(session.attributes))
+        session.attributes[ROUTINE_INDEX] += 1
+    routine_index = session.attributes.get(ROUTINE_INDEX)
+    routine_text = render_template('routine_{}'.format(routine_index))
     are_you_done = render_template('are_you_done')
+    return question(routine_text).reprompt(are_you_done)
 
-    return question(are_you_done)
-
-@ask.intent("")
-
-
+@ask.session_ended
+def session_ended():
+    return "{}", 200
 
 if __name__ == '__main__':
-
     app.run(debug=True)
