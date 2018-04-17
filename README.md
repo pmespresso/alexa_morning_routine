@@ -23,3 +23,23 @@
 
 ** "Okay, now time to meditate for 5 minutes." { Plays Ambient Noise }
 
+
+## How to Run Locally
+
+`git clone`
+
+`source path/to/virtualenvs/alexa_morning_routine_env/bin/activate`
+
+`pip install flask-ask`
+
+`pip install soundcloud`
+
+`python3 morning_routine.py`
+
+(in a separate terminal window/tab)
+
+`path/to/ngrok http 5000`
+
+Copy the forwarding address into the Endpoints tab in the Alexa Dev GUI https://developer.amazon.com/alexa/console/ask/test
+
+
