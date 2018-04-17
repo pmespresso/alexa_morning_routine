@@ -51,7 +51,7 @@ def new_game():
 
     welcome_msg = render_template('welcome')
 
-    return question(welcome_msg).reprompt(prompt).simple_card(card_title, text)
+    return question(welcome_msg).reprompt(prompt)
 
 @ask.intent("GetNextEventIntent")
 def next_routine():
