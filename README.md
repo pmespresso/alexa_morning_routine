@@ -2,12 +2,15 @@
 
 ## 6 Morning Routines to Own the Day
 
-1. Get out of bed within 2 minutes of waking up
+1. Get out of bed within 2 minutes of waking up 
+  * We will add accountability here with a hardware component that senses whether or not you've actually left your bed or you just lied to Alexa, by detecting pressure changes on your mattress.
 2. Make your bed
 3. Meditate --> Plays ambient noise pulled from soundcloud for the duration.
 4. Jump in a Cold Shower
 5. Drink some tea or coffee
+  * Can automate this part by connecting to your coffee machine so you exit the shower to the smell of freshly brewed coffee.
 6. Exercise
+  * Can add accountability by connecting to Fitbit/Apple Watch/etc. to confirm heart rate change.
 
 ## Sample Skill Usage
 
