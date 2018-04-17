@@ -50,6 +50,14 @@ def next_routine():
     are_you_done = render_template('are_you_done')
     return question(routine_text).reprompt(are_you_done)
 
+@ask.intent("SkipIntent")
+def skip_routine():
+    return next_routine()
+
+@ask.on_playback_finished()
+def stream_finished(token):
+    _infodump('Playback has finished for stream with token {}'.format(token))
+    return next_routine()
 
 @ask.intent('AMAZON.PauseIntent')
 def pause():
@@ -59,9 +67,17 @@ def pause():
 def resume():
     return audio('Resuming.').resume()
 
+@ask.intent('AMAZON.StopIntent')
+def stop():
+    return audio('stopping').clear_queue(stop=True)
+
 @ask.session_ended
 def session_ended():
     return "{}", 200
+
+def _infodump(obj, indent=2):
+    msg = json.dumps(obj, indent=indent)
+    logger.info(msg)
 
 if __name__ == '__main__':
     app.run(debug=True)
