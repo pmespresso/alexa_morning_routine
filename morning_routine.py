@@ -8,11 +8,14 @@ from flask_ask import Ask, statement, question, session, audio, current_stream
 
 import soundcloud
 
+import json
+
 app = Flask(__name__)
 
 ask = Ask(app, "/")
 
-logging.getLogger("flask_ask").setLevel(logging.DEBUG)
+logger = logging.getLogger("flask_ask")
+logger.setLevel(logging.DEBUG)
 
 ROUTINE_INDEX = "index"
 
