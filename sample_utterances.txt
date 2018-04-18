@@ -3,6 +3,13 @@ GetNextEventIntent done
 GetNextEventIntent finished
 GetNextEventIntent i'm done
 GetNextEventIntent next routine
+GetNextEventIntent yes i'm done
+GetNextEventIntent yes i am done
+GetNextEventIntent yeah
+GetNextEventIntent hell yeah
+GetNextEventIntent yup
+GetNextEventIntent yes
+
 
 AMAZON.StopIntent no
 AMAZON.StopIntent nope
