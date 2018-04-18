@@ -51,7 +51,7 @@ def new_game():
 
     welcome_msg = render_template('welcome')
 
-    return question(welcome_msg).reprompt(prompt)
+    return question(welcome_msg).reprompt("get up bitch")
 
 @ask.intent("GetNextEventIntent")
 def next_routine():
@@ -77,8 +77,7 @@ def next_routine():
 
         return audio(routine_text).play(stream_url.location)
 
-    are_you_done = render_template('are_you_done')
-    return question(routine_text).reprompt(are_you_done)
+    return question(routine_text).reprompt("are you done yet?")
 
 @ask.on_playback_finished()
 def stream_finished(token):
