@@ -1,6 +1,6 @@
 welcome: Rise and shine. Get out of bed.
 
-routine_1: Okay, time to make your bed. Make sure not to leave any creases!
+routine_1: <speak><say-as interpret-as="interjection">all righty</say-as> time to make your bed. Make sure not to leave any creases!</speak>
 
 routine_2: Now find a quiet place to meditate for a few minutes.
 
@@ -13,3 +13,5 @@ routine_5: Time for a quick exercise
 routine_6: You've completed your morning routine! Congratulations, now go own the day!
 
 are_you_done: Are you done?
+
+resume_routine: Would you like to resume your previous routine? Or start a new one?

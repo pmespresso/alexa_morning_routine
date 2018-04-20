@@ -10,6 +10,8 @@ import soundcloud
 
 import json
 
+from dynamo_functions import get_user_state, insert_user_state
+
 app = Flask(__name__)
 
 ask = Ask(app, "/")
@@ -18,6 +20,8 @@ logger = logging.getLogger("flask_ask")
 logger.setLevel(logging.DEBUG)
 
 ROUTINE_INDEX = "index"
+MAX_ROUTINE = 6
+MAX_ROUTINE_REACHED = False
 
 routine_cards = [
     {
@@ -43,6 +47,10 @@ routine_cards = [
     {
         "title": "Exercise",
         "text": "Get your blood flowing, and your metabolism revving. GET SOME!"
+    },
+    {
+        "title": "You're all done. Have an amazing day",
+        "text": "Your morning routine has come to an end. Make sure to follow up tomorrow morning."
     }
 ]
 
@@ -52,35 +60,88 @@ def new_game():
     text = "Welcome to your morning routine. 15 minutes of discipline to let you own the day."
     prompt = "First thing's first, get out of bed!!!"
 
-    welcome_msg = render_template('welcome')
+    # Check if existing user or new user
+    r_response = get_user_state(session.user.userId)
+    if( str(r_response)=='Not Found' or str(r_response)=='Error' or r_response==1):
+    
+        # New user or Existing user with state 1
+        # If New User, Insert with state 1
+        if(str(r_response)!='1'):
+            w_response = insert_user_state(session.user.userId, 1)
+        
+        # Start from the beginning
+        welcome_msg = render_template('welcome')
+        return question(welcome_msg)\
+                    .reprompt(prompt)\
+                    .standard_card(title = card_title, text = text)
+    else:
+    
+        # Existing User
+        # Ask whether to resume or start over
+        resume_msg = render_template('resume_routine')
+        session.attributes[ROUTINE_INDEX] = r_response
+        return question(resume_msg)\
+                    .reprompt(resume_msg)\
+                    .standard_card(title = 'Resume or Start Over?', text = resume_msg)
+        
+@ask.intent("StartOverEventIntent")
+def start_over():
+    if(ROUTINE_INDEX in session.attributes):
+        del session.attributes[ROUTINE_INDEX]
+    return next_routine()
 
-    return question(welcome_msg).reprompt("get up bitch")
+
+@ask.intent("ResumeEventIntent")
+def resume_routine():
+    return next_routine()
+
 
 @ask.intent("GetNextEventIntent")
 def next_routine():
+    global MAX_ROUTINE_REACHED
     if not session.attributes:
         session.attributes[ROUTINE_INDEX] = 1
     else:
         session.attributes[ROUTINE_INDEX] += 1
     routine_index = session.attributes.get(ROUTINE_INDEX)
     routine_text = render_template('routine_{}'.format(routine_index))
-
+    card_title = routine_cards[routine_index]['title']
+    card_text =  routine_cards[routine_index]['text']
+    
+    # Update routine state in dynamodb
+    # Resetting for next time
+    if(routine_index==MAX_ROUTINE):
+        MAX_ROUTINE_REACHED = True
+        routine_index=1
+    
+    w_response = insert_user_state(session.user.userId, routine_index)
+    print('Update - user {} \nwith routine {}'.format(session.user.userId, routine_index))
+    
     if routine_index == 2:
         # create a client object with your app credentials
-        client = soundcloud.Client(client_id='803c9b912c2633e3b8bc388e98277b83')
+        #client = soundcloud.Client(client_id='803c9b912c2633e3b8bc388e98277b83')
 
         # fetch track to stream
-        track = client.get('/tracks/247140951')
+        #track = client.get('/tracks/247140951')
 
         # get the tracks streaming URL
-        stream_url = client.get(track.stream_url, allow_redirects=False)
+        #stream_url = client.get(track.stream_url, allow_redirects=False)
 
         # print the tracks stream URL
-        print(stream_url.location)
+        #print(stream_url.location)
 
-        return audio(routine_text).play(stream_url.location)
+        #return audio(routine_text).play(stream_url.location)
+        return question('meditation happens now')\
+                    .reprompt("are you done yet?")\
+                    .standard_card(title = card_title, text = card_text)
 
-    return question(routine_text).reprompt("are you done yet?")
+    if(MAX_ROUTINE_REACHED):
+        return statement(routine_text)\
+                        .standard_card(title = card_title, text = card_text)
+    else:
+        return question(routine_text)\
+                    .reprompt("are you done yet?")\
+                    .standard_card(title = card_title, text = card_text)
 
 @ask.on_playback_finished()
 def stream_finished(token):
