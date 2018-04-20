@@ -1,0 +1,74 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "my routine",
+            "intents": [
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": [
+                        "no thank you",
+                        "no thanks",
+                        "nope",
+                        "no"
+                    ]
+                },
+                {
+                    "name": "GetNextEventIntent",
+                    "slots": [],
+                    "samples": [
+                        "next routine",
+                        "i'm done",
+                        "finished",
+                        "done",
+                        "mission accomplished"
+                    ]
+                },
+                {
+                    "name": "AMAZON.PauseIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.ResumeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "StartOverEventIntent",
+                    "slots": [],
+                    "samples": [
+                        "start over",
+                        "reset routine",
+                        "reset",
+                        "start new",
+                        "start a new one"
+                    ]
+                },
+                {
+                    "name": "ResumeEventIntent",
+                    "slots": [],
+                    "samples": [
+                        "i would like to resume my previous routine",
+                        "resume my routine",
+                        "resume my previous routine",
+                        "previous routine",
+                        "resume previous routine",
+                        "i would like to resume",
+                        "i would like to continue",
+                        "continue routine",
+                        "continue",
+                        "resume",
+                        "resume routine"
+                    ]
+                }
+            ],
+            "types": []
+        }
+    }
+}

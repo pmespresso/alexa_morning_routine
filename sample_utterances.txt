@@ -10,6 +10,23 @@ GetNextEventIntent hell yeah
 GetNextEventIntent yup
 GetNextEventIntent yes
 
+StartOverEventIntent start a new one
+StartOverEventIntent start new
+StartOverEventIntent reset routine
+StartOverEventIntent reset
+StartOverEventIntent start over
+
+ResumeEventIntent resume routine
+ResumeEventIntent resume
+ResumeEventIntent i would like to resume
+ResumeEventIntent continue
+ResumeEventIntent continue routine
+ResumeEventIntent i would like to continue
+ResumeEventIntent resume previous routine
+ResumeEventIntent previous routine
+ResumeEventIntent resume my previous routine
+ResumeEventIntent resume my routine
+ResumeEventIntent i would like to resume my previous routine
 
 AMAZON.StopIntent no
 AMAZON.StopIntent nope
