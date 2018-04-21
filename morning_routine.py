@@ -59,27 +59,33 @@ motivation_list = [
         "title": "Why you should make your bed!",
         "text": "If you make your bed every morning, you will have accomplished\
                 the first task of the day. It will give you a small sense of pride,\
-                and it will encourage you to do another task, and, another and, another."
+                and it will encourage you to do another task, and, another, and, another. "
     },
     {
         "title": "Meditate to solve your challenges!",
         "text": "regular meditation gives you time to practice control of your emotions,\
-                which then influences how you react to challenges throughout the day."
+                which then influences how you react to challenges throughout the day. "
     },
     {
         "title": "Health is more important than you think!",
         "text": "getting into your body and exercising even for 30 seconds a day, has a \
-                dramatic effect on your your mood and quiets mental chatter."
+                dramatic effect on your your mood and quiets mental chatter. "
     },
     {
         "title": "Shower to lose fat?",
-        "text": "a quick 5 to 20 minutes cold shower focusing on the back area helps\
-                the body to engage in some amount of fat burning"
+        "text": "a quick 5 to 20 minutes cold shower, focusing on the back area, helps\
+                the body to engage in some amount of, fat burning. "
     },
     {
         "title": "The Metabolism Boost!",
-        "text": "drinking some light tea in the morning will get your metabolism fired up!"
+        "text": "drinking some light tea in the morning will get your metabolism fired up! "
     }
+]
+
+songs_list = [
+    "https://s3.amazonaws.com/alexa-workout-sounds/Jay_Jay_conv.mp3",
+    "https://s3.amazonaws.com/alexa-workout-sounds/Water_Lily_conv.mp3",
+    "https://s3.amazonaws.com/alexa-workout-sounds/Wish_You_d_Come_True_conv.mp3"
 ]
 
 @ask.launch
@@ -121,16 +127,21 @@ def start_over():
 
 @ask.intent("ResumeEventIntent")
 def resume_routine():
-    return next_routine()
+    return next_routine(INCREMENT_FLAG=False)
 
 
 @ask.intent("GetNextEventIntent")
-def next_routine():
+def next_routine(INCREMENT_FLAG=True):
     global MAX_ROUTINE_REACHED
+    
+    inc_flag = INCREMENT_FLAG
+    print("The INCREMENT_FLAG = {}".format(INCREMENT_FLAG))
+    
     if not session.attributes:
         session.attributes[ROUTINE_INDEX] = 1
     else:
-        session.attributes[ROUTINE_INDEX] += 1
+        if(INCREMENT_FLAG is None):
+            session.attributes[ROUTINE_INDEX] += 1
     routine_index = session.attributes.get(ROUTINE_INDEX)
     routine_text = render_template('routine_{}'.format(routine_index))
     card_title = routine_cards[routine_index]['title']
@@ -174,17 +185,17 @@ def next_routine():
                     
 @ask.intent("BenefitsEventIntent")
 def benefits_handler():
-    motivation = choice(motivation_list)
+    motivation = choice(motivation_list).copy()
     r_response = get_user_state(session.user.userId)
     print("GET USER STATE RESPONSE : {}".format(r_response))
     # Respond according to the routine stage user is at!
     if(type(r_response)==int):
-        motivation = motivation_list[r_response-1]
+        motivation = motivation_list[r_response-1].copy()
     
-    motivation['text'] += " Now come on, go ahead and finish your routine. If you need any motivation along the way, let me know."
+    motivation['text'] += " If you need any more motivation along the way, let me know. To resume your routine, say continue. "
     
     return question(motivation['text'])\
-                .reprompt("To continue, just say next routine.")\
+                .reprompt("To continue, just say continue or resume routine.")\
                 .standard_card(title = motivation['title'], text = motivation['text'])
 
 @ask.on_playback_finished()
