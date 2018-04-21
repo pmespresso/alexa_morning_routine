@@ -1,6 +1,6 @@
 import logging
 
-from random import randint
+from random import randint, choice
 
 from flask import Flask, render_template
 
@@ -37,6 +37,10 @@ routine_cards = [
         "text": "Just a little meditation to take care of your mind."
     },
     {
+        "title": "Exercise",
+        "text": "Get your blood flowing, and your metabolism revving. GET SOME!"
+    },
+    {
         "title": "Jump in a Cold Shower",
         "text": "Make sure to end your shower with at least 30 seconds of super cold water. You'll feel incredible afterwards."
     },
@@ -45,12 +49,36 @@ routine_cards = [
         "text": "There is no life before coffee"
     },
     {
-        "title": "Exercise",
-        "text": "Get your blood flowing, and your metabolism revving. GET SOME!"
-    },
-    {
         "title": "You're all done. Have an amazing day",
         "text": "Your morning routine has come to an end. Make sure to follow up tomorrow morning."
+    }
+]
+
+motivation_list = [
+    {
+        "title": "Why you should make your bed!",
+        "text": "If you make your bed every morning, you will have accomplished\
+                the first task of the day. It will give you a small sense of pride,\
+                and it will encourage you to do another task, and, another and, another."
+    },
+    {
+        "title": "Meditate to solve your challenges!",
+        "text": "regular meditation gives you time to practice control of your emotions,\
+                which then influences how you react to challenges throughout the day."
+    },
+    {
+        "title": "Health is more important than you think!",
+        "text": "getting into your body and exercising even for 30 seconds a day, has a \
+                dramatic effect on your your mood and quiets mental chatter."
+    },
+    {
+        "title": "Shower to lose fat?",
+        "text": "a quick 5 to 20 minutes cold shower focusing on the back area helps\
+                the body to engage in some amount of fat burning"
+    },
+    {
+        "title": "The Metabolism Boost!",
+        "text": "drinking some light tea in the morning will get your metabolism fired up!"
     }
 ]
 
@@ -142,6 +170,22 @@ def next_routine():
         return question(routine_text)\
                     .reprompt("are you done yet?")\
                     .standard_card(title = card_title, text = card_text)
+
+                    
+@ask.intent("BenefitsEventIntent")
+def benefits_handler():
+    motivation = choice(motivation_list)
+    r_response = get_user_state(session.user.userId)
+    print("GET USER STATE RESPONSE : {}".format(r_response))
+    # Respond according to the routine stage user is at!
+    if(type(r_response)==int):
+        motivation = motivation_list[r_response-1]
+    
+    motivation['text'] += " Now come on, go ahead and finish your routine. If you need any motivation along the way, let me know."
+    
+    return question(motivation['text'])\
+                .reprompt("To continue, just say next routine.")\
+                .standard_card(title = motivation['title'], text = motivation['text'])
 
 @ask.on_playback_finished()
 def stream_finished(token):

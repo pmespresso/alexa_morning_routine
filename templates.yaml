@@ -4,14 +4,12 @@ routine_1: <speak><say-as interpret-as="interjection">all righty</say-as> time t
 
 routine_2: Now find a quiet place to meditate for a few minutes.
 
-routine_3: Time to jump in a cold shower!
+routine_3: Time for a quick exercise
 
-routine_4: Now go brew some tea.
+routine_4: Time to jump in a cold shower!
 
-routine_5: Time for a quick exercise
+routine_5: Now go brew some tea.
 
 routine_6: You've completed your morning routine! Congratulations, now go own the day!
-
-are_you_done: Are you done?
 
 resume_routine: Would you like to resume your previous routine? Or start a new one?
