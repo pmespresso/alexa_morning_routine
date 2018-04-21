@@ -28,7 +28,21 @@ ResumeEventIntent resume my previous routine
 ResumeEventIntent resume my routine
 ResumeEventIntent i would like to resume my previous routine
 
+
 AMAZON.StopIntent no
 AMAZON.StopIntent nope
 AMAZON.StopIntent no thanks
 AMAZON.StopIntent no thank you
+
+
+BenefitsEventIntent how does it help me
+BenefitsEventIntent why do i need to follow a routine
+BenefitsEventIntent why do i need it
+BenefitsEventIntent how is this important
+BenefitsEventIntent why should i use
+BenefitsEventIntent give me some motivation
+BenefitsEventIntent i cant follow this routine
+BenefitsEventIntent motivate me
+BenefitsEventIntent i need some motivation to keep going
+BenefitsEventIntent i need some motivation
+BenefitsEventIntent i need motivation

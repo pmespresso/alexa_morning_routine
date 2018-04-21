@@ -9,7 +9,13 @@
                 },
                 {
                     "name": "AMAZON.HelpIntent",
-                    "samples": []
+                    "samples": [
+                        "how to follow the morning routine",
+                        "help",
+                        "usage",
+                        "how to use",
+                        "how to use this skill"
+                    ]
                 },
                 {
                     "name": "AMAZON.StopIntent",
@@ -65,6 +71,24 @@
                         "continue",
                         "resume",
                         "resume routine"
+                    ]
+                },
+                {
+                    "name": "BenefitsEventIntent",
+                    "slots": [],
+                    "samples": [
+                        "i need motivation",
+                        "i need some motivation",
+                        "i need some motivation to keep going",
+                        "motivate me",
+                        "give me some motivation",
+                        "i cant follow this routine",
+                        "how does it help me",
+                        "why do i need to follow a routine",
+                        "why do i need it",
+                        "how is this important",
+                        "Why should I use",
+                        "why should I use this skill"
                     ]
                 }
             ],

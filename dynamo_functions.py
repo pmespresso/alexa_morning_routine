@@ -19,7 +19,7 @@ def get_user_state(user_id):
         return 'Error'
     else:
         if('Item' in response and 'state' in response['Item']):
-            return response['Item']['state']
+            return int(response['Item']['state'])
         else:
             return 'Not Found'
             
