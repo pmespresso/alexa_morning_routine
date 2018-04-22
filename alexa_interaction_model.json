@@ -90,6 +90,39 @@
                         "Why should I use",
                         "why should I use this skill"
                     ]
+                },
+                {
+                    "name": "PlayMusicEventIntent",
+                    "slots": [],
+                    "samples": [
+                        "keep it on",
+                        "keep it going",
+                        "keep playing the music",
+                        "entertain me with some music",
+                        "enntertain me",
+                        "play some tune",
+                        "tune",
+                        "play a tune",
+                        "song",
+                        "play song",
+                        "play some song",
+                        "play a song",
+                        "music",
+                        "some music please",
+                        "play morning music",
+                        "play soothing music",
+                        "play music",
+                        "entertain me",
+                        "play some music"
+                    ]
+                },
+                {
+                    "name": "ExerciseEventIntent",
+                    "slots": [],
+                    "samples": [
+                        "next work out",
+                        "next exercise"
+                    ]
                 }
             ],
             "types": []
