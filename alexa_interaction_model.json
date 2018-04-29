@@ -10,6 +10,9 @@
                 {
                     "name": "AMAZON.HelpIntent",
                     "samples": [
+                        "explain",
+                        "i dont know",
+                        "hoe to follow the task",
                         "how to follow the morning routine",
                         "help",
                         "usage",
@@ -19,19 +22,29 @@
                 },
                 {
                     "name": "AMAZON.StopIntent",
-                    "samples": [
-                        "no thank you",
-                        "no thanks",
-                        "nope",
-                        "no"
-                    ]
+                    "samples": []
                 },
                 {
                     "name": "GetNextEventIntent",
                     "slots": [],
                     "samples": [
+                        "it was a cold shower",
+                        "brewed my tea",
+                        "done with the shower",
+                        "made my bed with no creases",
+                        "made my bed",
+                        "i made my bed",
+                        "got out of bed",
+                        "i got out of bed",
+                        "okay",
                         "next routine",
-                        "i'm done",
+                        "go to next routine",
+                        "open next routine",
+                        "whats next",
+                        "open next task",
+                        "go to next task",
+                        "next task",
+                        "i am done",
                         "finished",
                         "done",
                         "mission accomplished"
@@ -49,6 +62,8 @@
                     "name": "StartOverEventIntent",
                     "slots": [],
                     "samples": [
+                        "start from first task",
+                        "reset task",
                         "start over",
                         "reset routine",
                         "reset",
@@ -60,16 +75,24 @@
                     "name": "ResumeEventIntent",
                     "slots": [],
                     "samples": [
-                        "i would like to resume my previous routine",
+                        "continue task",
+                        "resume task",
+                        "i would like to resume my task",
+                        "resume previous task",
+                        "previous task",
+                        "resume my task",
+                        "i would like to continue my previous task",
+                        "continue previous task",
+                        "continue previous routine",
+                        "i would like to continue my previous routine",
                         "resume my routine",
                         "resume my previous routine",
                         "previous routine",
                         "resume previous routine",
-                        "i would like to resume",
+                        "i would like to resume my routine",
                         "i would like to continue",
                         "continue routine",
                         "continue",
-                        "resume",
                         "resume routine"
                     ]
                 },
@@ -77,6 +100,8 @@
                     "name": "BenefitsEventIntent",
                     "slots": [],
                     "samples": [
+                        "why do i need to follow a task",
+                        "i cant follow this task",
                         "i need motivation",
                         "i need some motivation",
                         "i need some motivation to keep going",
@@ -87,7 +112,7 @@
                         "why do i need to follow a routine",
                         "why do i need it",
                         "how is this important",
-                        "Why should I use",
+                        "why should I use",
                         "why should I use this skill"
                     ]
                 },
@@ -95,6 +120,7 @@
                     "name": "PlayMusicEventIntent",
                     "slots": [],
                     "samples": [
+                        "this task is boring",
                         "keep it on",
                         "keep it going",
                         "keep playing the music",
@@ -122,6 +148,22 @@
                     "samples": [
                         "next work out",
                         "next exercise"
+                    ]
+                },
+                {
+                    "name": "InsightsEventIntent",
+                    "slots": [],
+                    "samples": [
+                        "give me an insight",
+                        "give me insights",
+                        "insights",
+                        "why do you need fitbit",
+                        "give me fitbit insights",
+                        "give me some fitbit data",
+                        "how many calories did i lose last time",
+                        "calories",
+                        "how many calories did i lose",
+                        "give me some insights"
                     ]
                 }
             ],

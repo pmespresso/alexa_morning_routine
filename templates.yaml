@@ -2,7 +2,7 @@ welcome: Rise and shine. Get out of bed.
 
 routine_1: <speak><say-as interpret-as="interjection">all righty</say-as> time to make your bed. Make sure not to leave any creases!</speak>
 
-routine_2: Now find a quiet place to meditate for a few minutes.
+routine_2: Now find a quiet place to meditate for a few minutes. Once meditation is over, Continue with the tasks by saying open my routine.
 
 routine_3: Time for a quick exercise. 
 
@@ -12,4 +12,6 @@ routine_5: Now go brew some tea.
 
 routine_6: You've completed your morning routine! Congratulations, now go own the day!
 
-resume_routine: Would you like to resume your previous routine? Or start a new one?
+resume_routine: Would you like to continue with your previous routine? Or start a new one?
+
+good_bye: Good Bye. Make sure to complete your routine tomorrow. 

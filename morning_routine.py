@@ -4,13 +4,23 @@ from random import randint, choice
 
 from flask import Flask, render_template
 
-from flask_ask import Ask, statement, question, session, audio, current_stream
+from flask_ask import Ask, statement, question, session, audio, current_stream, context, request
 
 import soundcloud
 
 import json
 
-from dynamo_functions import get_user_state, insert_user_state
+import requests
+
+from dynamo_functions import get_user_state, insert_user_state, update_user_state, update_user_exercise_start, update_user_exercise_end, get_exercise_times
+
+import pytz
+
+from datetime import datetime
+
+from fitbit_helper import get_calories_from_exercise, get_fitbit_timezone
+
+from response_builders import build_speechlet_response_ssml, build_response
 
 app = Flask(__name__)
 
@@ -22,6 +32,12 @@ logger.setLevel(logging.DEBUG)
 ROUTINE_INDEX = "index"
 MAX_ROUTINE = 6
 MAX_ROUTINE_REACHED = False
+FITBIT = False
+
+exercise_date = ''
+exercise_start_time = ''
+exercise_end_time = ''
+exercise_insight = ''
 
 routine_cards = [
     {
@@ -88,26 +104,81 @@ songs_list = [
     "https://s3.amazonaws.com/alexa-workout-sounds/Wish_You_d_Come_True_conv_130.mp3"
 ]
 
+
+def link_question(text):
+    print('inside link')
+    card_title = 'Link this skill with Fitbit.'
+    speech_output = text
+    reprompt_text = ' Say Next Routine to continue. '
+    should_end_session = False
+    card_type = 'LinkAccount'
+    return json.dumps(build_response(session.attributes, build_speechlet_response_ssml(\
+        card_title, speech_output, reprompt_text, should_end_session, card_type)))
+ 
+
+@ask.intent('AMAZON.HelpIntent')
+def help():
+    speech_output = ''' I will guide you through your morning routine everyday, and give you motivation along the way. This skill is based on Tim Ferris's\
+                         famous morning routine that is followed by a majority of people. If you link your fitbit\
+                         device with this skill, I can keep track of how you are doing. After you complete a task, say, next task, to go to the next task. Ask me to play music at any time if you\
+                         are still completing the task. If you ever need motivation to do a task, say, motivate me, to let me change your mind. Lastly, say, give\
+                         me some insights, to let me help you understand your fitbit achievements for this morning routine. Say Stop, to exit this skill.\
+                    '''
+    card_title = 'Here to Help!'
+    prompt = ' Say resume routine to continue. '
+    card_text = ''' Based on Tim Ferris's famous morning routine.
+                    Say Resume Task, or Next Task to navigate between tasks.
+                    Say Done Or Mission Accomplished, to confirm finishing the task.
+                    Say Motivate me, to get motivation to complete a task.
+                    Say Give me Some Insights, to get fitbit based insights.
+                    Say Stop, to exit this skill'''
+                    
+    return question(speech_output)\
+                .reprompt(prompt)\
+                .standard_card(title = card_title, text = card_text)
+
 @ask.launch
 def new_game():
+    
     card_title = "Morning Routine"
     text = "Welcome to your morning routine. 15 minutes of discipline to let you own the day."
     prompt = "First thing's first, get out of bed!!!"
-
+    
+    # FITBIT API
+    if('accessToken' in session.user and len(session.user.accessToken)>5):
+        print('FITBIT enabled')
+    else:
+        print('FITBIT Not Enabled')
+        
+    
+    print('ACCESS TOKEN : {}'.format(session.user.accessToken))
+    
     # Check if existing user or new user
     r_response = get_user_state(session.user.userId)
+    
+    # IF 1.) New User or 2.) Existing user with routine index 1
     if( str(r_response)=='Not Found' or str(r_response)=='Error' or r_response==1):
     
-        # New user or Existing user with state 1
+        welcome_msg = render_template('welcome')
+        
         # If New User, Insert with state 1
         if(str(r_response)!='1'):
             w_response = insert_user_state(session.user.userId, 1)
+            welcome_msg = ''' Hey there! You're one step closer to your own success. Let me give you a quick introduction. I will guide you \
+                         through your morning routine everyday, and give you motivation along the way. This skill is based on Tim Ferris's\
+                         famous morning routine that is followed by a majority of people. If you link your fitbit\
+                         device with this skill, I can keep track of how you are doing. After you complete a task, say, next task, to go to the next task. Ask me to play music at any time if you\
+                         are still completing the task. If you ever need motivation to do a task, say, motivate me, to let me change your mind. Lastly, say, give\
+                         me some insights, to let me help you understand your fitbit achievements for this morning routine. Say Stop, to exit this skill.\
+                    '''
+        session.attributes[ROUTINE_INDEX] = 0
         
         # Start from the beginning
-        welcome_msg = render_template('welcome')
+        
         return question(welcome_msg)\
                     .reprompt(prompt)\
                     .standard_card(title = card_title, text = text)
+    # ELSE 3.) Existing user with routine index > 1
     else:
     
         # Existing User
@@ -115,14 +186,15 @@ def new_game():
         resume_msg = render_template('resume_routine')
         session.attributes[ROUTINE_INDEX] = r_response
         return question(resume_msg)\
-                    .reprompt(resume_msg)\
+                    .reprompt('say continue previous routine to start from where you left off, or, say start a new one. ')\
                     .standard_card(title = 'Resume or Start Over?', text = resume_msg)
         
 @ask.intent("StartOverEventIntent")
 def start_over():
-    if(ROUTINE_INDEX in session.attributes):
-        del session.attributes[ROUTINE_INDEX]
-    return next_routine()
+    #if(ROUTINE_INDEX in session.attributes):
+    #    del session.attributes[ROUTINE_INDEX]
+    session.attributes[ROUTINE_INDEX] = 1
+    return next_routine(INCREMENT_FLAG=False)
 
 
 @ask.intent("ResumeEventIntent")
@@ -134,13 +206,21 @@ def resume_routine():
 def next_routine(INCREMENT_FLAG=True):
     global MAX_ROUTINE_REACHED
     
-    inc_flag = INCREMENT_FLAG
     print("The INCREMENT_FLAG = {}".format(INCREMENT_FLAG))
     
     if not session.attributes or ROUTINE_INDEX not in session.attributes:
-        session.attributes[ROUTINE_INDEX] = 1
+        r_response = get_user_state(session.user.userId)
+        
+        if( str(r_response)=='Not Found' or str(r_response)=='Error'):
+            session.attributes[ROUTINE_INDEX] = 1
+        else:
+            if(INCREMENT_FLAG is None or INCREMENT_FLAG):
+                session.attributes[ROUTINE_INDEX] = (r_response+1)
+            else:
+                session.attributes[ROUTINE_INDEX] = r_response
+    
     else:
-        if(INCREMENT_FLAG is None):
+        if(INCREMENT_FLAG is None or INCREMENT_FLAG):
             session.attributes[ROUTINE_INDEX] += 1
     routine_index = session.attributes.get(ROUTINE_INDEX)
     routine_text = render_template('routine_{}'.format(routine_index))
@@ -153,31 +233,44 @@ def next_routine(INCREMENT_FLAG=True):
         MAX_ROUTINE_REACHED = True
         routine_index=1
     
-    w_response = insert_user_state(session.user.userId, routine_index)
-    print('Update - user {} \nwith routine {}'.format(session.user.userId, routine_index))
+    if('user' in session and 'userId' in session.user):
+        w_response = update_user_state(session.user.userId, routine_index)
+    else:
+        print('CCOCOCOOCOCOCOCOCOCOCOOCOCO')
+        print(context)
+        w_response = update_user_state(context.System.user.userId, routine_index)
+        
+    print('Update - user \nwith routine {}'.format(routine_index))
+    
+    
     
     if routine_index == 2:
         # create a client object with your app credentials
-        #client = soundcloud.Client(client_id='803c9b912c2633e3b8bc388e98277b83')
+        client = soundcloud.Client(client_id='803c9b912c2633e3b8bc388e98277b83')
 
         # fetch track to stream
-        #track = client.get('/tracks/247140951')
+        track = client.get('/tracks/247140951')
 
         # get the tracks streaming URL
-        #stream_url = client.get(track.stream_url, allow_redirects=False)
+        stream_url = client.get(track.stream_url, allow_redirects=False)
 
         # print the tracks stream URL
         #print(stream_url.location)
 
-        #return audio(routine_text).play(stream_url.location)
-        return question('meditation happens now')\
-                    .reprompt("are you done yet?")\
-                    .standard_card(title = card_title, text = card_text)
+        #session.attributes['audio_url'] = stream_url.location
+        
+        return audio(routine_text).play(stream_url.location)
+        #return question('meditation happens now')\
+        #            .reprompt("are you done yet?")\
+        #            .standard_card(title = card_title, text = card_text)
                     
     if routine_index == 3:
         return ExerciseHandler()
 
     if(MAX_ROUTINE_REACHED):
+        print('MAX ROUTINE REACHED : {}'.format(MAX_ROUTINE_REACHED))
+        if('accessToken' not in session.user):
+            routine_text += ' Link this skill with your Fitbit device, to get insights on how youre doing.'
         return statement(routine_text)\
                         .standard_card(title = card_title, text = card_text)
     else:
@@ -188,6 +281,7 @@ def next_routine(INCREMENT_FLAG=True):
                     
 @ask.intent('ExerciseEventIntent')
 def ExerciseHandler():
+    global exercise_start_time, exercise_end_time, exercise_date, exercise_insight
     MAX_EXERCISE_LEVELS = 5
     exercise_list = [
         {
@@ -234,34 +328,66 @@ def ExerciseHandler():
         start_text += " We will be doing 5 exercises in around 5 to 7 minutes. Each exercise\
                         will be done in the first 35 seconds followed by 25 seconds rest. "
         session.attributes['exercise_level'] = 1
+        
+        # IF FITBIT IS ENABLED
+        if('accessToken' in session.user):
+            # Get the previous Times and get fitbit api response
+            r_resp = get_exercise_times(session.user.userId)
+
+            print('GOT EXERCISE TIMES : {}'.format(r_resp))
+            
+            if(r_resp!='Not Found' and r_resp!='Error'):
+                exercise_date = r_resp.split(',')[0].split(' ')[0]
+                exercise_start_time = r_resp.split(',')[0].split(' ')[1]
+                exercise_end_time = r_resp.split(',')[1].split(' ')[1]
+                if(session.user.accessToken):
+                    exercise_insight = get_calories_from_exercise(exercise_date, exercise_start_time, exercise_end_time, session.user.accessToken)
+            
+            print('EXERCISE INSIGHT : {}'.format(exercise_insight))
+            
+            
+            # Store the time zone
+            timezone = get_fitbit_timezone(session.user.accessToken)
+            session.attributes['timezone'] = timezone
+            
+            print('TIMEZONE : {}'.format(timezone))
+            tz = pytz.timezone(timezone)
+            ct = datetime.now(tz=tz).strftime("%Y-%m-%d %H:%M")
+            w_resp = update_user_exercise_start(session.user.userId, ct)
     else:
         start_text = ''
+        exercise_insight = ''
         session.attributes['exercise_level'] += 1
     
-    if(session.attributes['exercise_level'] == MAX_EXERCISE_LEVELS):    
-        next_exercise = " Awesome. You are all done with the exercise. To go to the next routine, say mission accomplished! "
+    if(session.attributes['exercise_level'] == MAX_EXERCISE_LEVELS): 
+        if('accessToken' in session.user):
+            tz = pytz.timezone(session.attributes['timezone'])
+            ct = datetime.now(tz=tz).strftime("%Y-%m-%d %H:%M")
+            w_resp = update_user_exercise_end(session.user.userId, ct)
+        next_exercise = " Awesome. You are all done with the exercise. To go to the next task, say mission accomplished! "
     elif(session.attributes['exercise_level'] < MAX_EXERCISE_LEVELS):
         next_exercise = " To start the next exercise, say next exercise."
     else:
-        return question("You are already done with your exercise. Say resume routine to continue.")\
-                    .reprompt("Say resume routine to continue.")\
-                    .standard_card(text = 'You are already done with your exercise.', title = 'Say Resume routine to continue!')
+        if(session.attributes[ROUTINE_INDEX]==3):
+            return question("You are already done with your exercise. Say next task to continue.")\
+                    .reprompt("Say next task to continue.")\
+                    .standard_card(text = 'You are already done with your exercise.', title = 'Say Next task to continue!')
+        else:
+            return question("You are already done with your exercise. Say resume task to continue.")\
+                        .reprompt("Say resume task to continue.")\
+                        .standard_card(text = 'You are already done with your exercise.', title = 'Say Resume task to continue!')
     
     exercise_title = exercise_list[session.attributes['exercise_level']-1]['title']
     exercise_text = exercise_list[session.attributes['exercise_level']-1]['text']
     
     timer = " <audio src=\"https://s3.amazonaws.com/alexa-workout-sounds/Tick_Tock_35.mp3\" /> "
     whistle = " <audio src=\"https://s3.amazonaws.com/alexa-workout-sounds/police-whistle-daniel_simon.mp3\" /> "
-    
-    if(session.attributes['exercise_level'] == MAX_EXERCISE_LEVELS):    
-        next_exercise = " Awesome. You are all done with the exercise. To go to the next routine, say mission accomplished! "
-    else:
-        next_exercise = " To start the next exercise, say next exercise."
+
     speech_output = "<speak>{}</speak>".format(
                                                 start_text +
+                                                exercise_insight +
                                                 ' The Next Exercise is ' +
                                                 exercise_title + '. ' +
-                                                exercise_text +
                                                 three_second +
                                                 timer +
                                                 whistle +
@@ -274,6 +400,33 @@ def ExerciseHandler():
                 .reprompt(next_exercise)\
                 .standard_card( text = exercise_text, title = exercise_title)
 
+                
+@ask.intent("InsightsEventIntent")
+def InsightsHandler():
+    global exercise_insight
+    
+    if('accessToken' not in session.user):
+        exercise_insight = 'Link your fitbit device with this skill on your alexa app to start getting insights.'
+        return link_question(exercise_insight)
+    else:
+        # Get the previous Times and get fitbit api response
+        r_resp = get_exercise_times(session.user.userId)
+        print('GOT EXERCISE TIMES : {}'.format(r_resp))
+        
+        if(r_resp!='Not Found' and r_resp!='Error'):
+            exercise_date = r_resp.split(',')[0].split(' ')[0]
+            exercise_start_time = r_resp.split(',')[0].split(' ')[1]
+            exercise_end_time = r_resp.split(',')[1].split(' ')[1]
+            exercise_insight = get_calories_from_exercise(exercise_date, exercise_start_time, exercise_end_time, session.user.accessToken)
+        else:
+            exercise_insight = ' Complete at least 1 morning routine for insights. '
+    
+    print('EXERCISE INSIGHT : {}'.format(exercise_insight))
+    return question(exercise_insight)\
+                        .reprompt("Say resume task to continue.")\
+                        .standard_card(text = exercise_insight, title = 'Your Fitbit Insights!')
+    
+
 @ask.intent("BenefitsEventIntent")
 def BenefitsHandler():
     motivation = choice(motivation_list).copy()
@@ -283,10 +436,10 @@ def BenefitsHandler():
     if(type(r_response)==int):
         motivation = motivation_list[r_response-1].copy()
     
-    motivation['text'] += " If you need any more motivation along the way, let me know. To resume your routine, say continue. "
+    motivation['text'] += " If you need any more motivation along the way, let me know. To resume your task, say continue. "
     
     return question(motivation['text'])\
-                .reprompt("To continue, just say continue or resume routine.")\
+                .reprompt("To continue, just say continue or resume task.")\
                 .standard_card(title = motivation['title'], text = motivation['text'])
 
 
@@ -304,7 +457,7 @@ def play_music():
 @ask.on_playback_finished()
 def stream_finished(token):
     _infodump('Playback has finished for stream with token {}'.format(token))
-    return next_routine()
+    update_user_state(context.System.user.userId, 3)
 
 @ask.on_playback_started()
 def started(offset, token):
@@ -317,30 +470,69 @@ def stopped(offset, token):
     _infodump('STOPPED Audio Stream at {} ms'.format(offset))
     _infodump('Stream holds the token {}'.format(token))
     _infodump('Stream stopped playing from {}'.format(current_stream.url))
-
-@ask.intent("SkipIntent")
-def skip_routine():
-    return next_routine()
-
+ 
 @ask.intent('AMAZON.PauseIntent')
 def pause():
-    return audio('Paused the stream.').stop()
+    return audio('I paused your meditation track.').stop()
 
 @ask.intent('AMAZON.ResumeIntent')
 def resume():
-    return audio('Resuming.').resume()
+    return audio('Resuming your meditation track.').resume()
 
 @ask.intent('AMAZON.StopIntent')
 def stop():
-    return audio('stopping').clear_queue(stop=True)
+    goodbye = render_template('good_bye')
+    return audio(goodbye).clear_queue(stop=True)
+
+@ask.intent('AMAZON.NextIntent')
+def next():
+    #update_user_state(context.System.user.userId, 3)
+    session.attributes[ROUTINE_INDEX] = 2
+    return next_routine()
+    
+@ask.intent('AMAZON.PreviousIntent')
+def previous():
+    return audio('You cannot go back at this stage. Lets continue with the meditation.').resume()
+    
+@ask.intent('AMAZON.ShuffleOffIntent')
+def shuffleoff():
+    return audio('There is only one meditation track. Lets continue with the meditation. ').resume()
+    
+@ask.intent('AMAZON.ShuffleOnIntent')
+def shuffleon():
+    return audio('There is only one meditation track. Lets continue with the meditation. ').resume()
+    
+@ask.intent('AMAZON.StartOverIntent')
+def startover():
+    session.attributes[ROUTINE_INDEX] = 2
+    return resume_routine()
+
+@ask.intent('AMAZON.CancelIntent')
+def cancel():
+    goodbye = render_template('good_bye')
+    return audio(goodbye).clear_queue(stop=True)
+    
+@ask.intent('AMAZON.LoopOffIntent')
+def loopoff():
+    return audio('').resume()
+    
+@ask.intent('AMAZON.RepeatIntent')
+def repeat():
+    return audio('Lets continue with our meditation.').resume()
+    
+@ask.intent('AMAZON.LoopOnIntent')
+def loopon():
+    return audio('').resume()
 
 @ask.session_ended
 def session_ended():
     return "{}", 200
 
 def _infodump(obj, indent=2):
-    msg = json.dumps(obj, indent=indent)
-    logger.info(msg)
+    #print('INTENT : '+request.intent.name)
+    #msg = json.dumps(obj, indent=indent)
+    #logger.info(msg)
+    logger.info('\n---------------------------------------------\n')
 
 if __name__ == '__main__':
     app.run(debug=True)
